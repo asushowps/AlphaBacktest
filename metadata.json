@@ -1,0 +1,6 @@
+{
+  "name": "AlphaBacktest - 30-Year Stock Strategy Simulator",
+  "description": "Comprehensive 30-year stock backtesting simulator comparing Lump-Sum vs Yearly Top-Up strategies with real-time and historical market data, CAGR trajectories, and drawdown analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
