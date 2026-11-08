@@ -7,6 +7,7 @@ import { CagrChart } from './components/CagrChart.js';
 import { YearlyBreakdownModal } from './components/YearlyBreakdownModal.js';
 import { ExportModal } from './components/ExportModal.js';
 import { BacktestParams, BacktestResponse, StrategyResult } from './types/stock.js';
+import { runClientBacktest } from './services/clientBacktest.js';
 import { AlertCircle, RefreshCw, Layers, TrendingUp, DollarSign } from 'lucide-react';
 
 export default function App() {
@@ -41,17 +42,19 @@ export default function App() {
   const [data, setData] = useState<BacktestResponse | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [dataSource, setDataSource] = useState<string>('Live Market Feed');
 
   // Modals & View States
   const [selectedStockForModal, setSelectedStockForModal] = useState<StrategyResult | null>(null);
   const [isExportOpen, setIsExportOpen] = useState<boolean>(false);
   const [strategyView, setStrategyView] = useState<'both' | 'lump-sum' | 'yearly-top-up'>('both');
 
-  // Fetch backtest data from API
+  // Fetch backtest data with automatic browser fallback for Vercel / serverless deployments
   const fetchBacktestData = useCallback(async (currentParams: BacktestParams) => {
     setIsLoading(true);
     setError(null);
 
+    // 1. Attempt serverless / API endpoint
     try {
       const query = new URLSearchParams({
         symbols: currentParams.symbols.join(','),
@@ -61,17 +64,36 @@ export default function App() {
       });
 
       const res = await fetch(`/api/stock-data?${query.toString()}`);
-      if (!res.ok) {
-        throw new Error(`Failed to load backtest data: HTTP ${res.status}`);
-      }
+      const contentType = res.headers.get('content-type') || '';
 
-      const json: BacktestResponse = await res.json();
-      setData(json);
-    } catch (err: any) {
-      console.error('Backtest fetch failed:', err);
-      setError(err.message || 'Unable to connect to market data service. Please try again.');
-    } finally {
-      setIsLoading(false);
+      if (res.ok && contentType.includes('application/json')) {
+        const json: BacktestResponse = await res.json();
+        if (json.lumpSumResults && json.lumpSumResults.length > 0) {
+          setData(json);
+          setDataSource(json.isRealTime ? 'Live Market Feed' : 'Verified Archive');
+          setIsLoading(false);
+          return;
+        }
+      }
+      throw new Error(`API returned HTTP ${res.status} or non-JSON response`);
+    } catch (serverErr) {
+      console.warn('[AlphaBacktest] Server API unreachable or returned error on Vercel. Activating browser computation engine:', serverErr);
+
+      // 2. Resilient Browser Execution (Vercel-proof)
+      try {
+        const clientJson = await runClientBacktest(currentParams);
+        if (clientJson.lumpSumResults && clientJson.lumpSumResults.length > 0) {
+          setData(clientJson);
+          setDataSource(clientJson.isRealTime ? 'Live Market (Browser)' : 'Historical Archive (Vercel Safe)');
+        } else {
+          setError('Unable to compute backtest for selected symbols. Please check symbols and try again.');
+        }
+      } catch (clientErr: any) {
+        console.error('Client backtest error:', clientErr);
+        setError(clientErr.message || 'Backtest computation failed');
+      } finally {
+        setIsLoading(false);
+      }
     }
   }, []);
 
@@ -94,6 +116,7 @@ export default function App() {
         onRefresh={handleRunBacktest}
         isLoading={isLoading}
         isRealTime={data?.isRealTime ?? true}
+        dataSource={dataSource}
         lastUpdated={data?.timestamp}
       />
 

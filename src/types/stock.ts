@@ -1,3 +1,9 @@
+export interface RawDailyPrice {
+  date: string;
+  timestamp: number;
+  price: number;
+}
+
 export interface StockQuote {
   symbol: string;
   name: string;

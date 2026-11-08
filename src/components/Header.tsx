@@ -8,6 +8,7 @@ interface HeaderProps {
   onRefresh: () => void;
   isLoading: boolean;
   isRealTime: boolean;
+  dataSource?: string;
   lastUpdated?: string;
 }
 
@@ -18,6 +19,7 @@ export const Header: React.FC<HeaderProps> = ({
   onRefresh,
   isLoading,
   isRealTime,
+  dataSource,
   lastUpdated,
 }) => {
   return (
@@ -57,9 +59,9 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Zone 3: Primary Actions & Utilities */}
         <div className="flex items-center gap-3 shrink-0">
           {/* Data freshness indicator */}
-          <div className="hidden lg:flex items-center gap-2 text-xs font-mono text-slate-500 dark:text-slate-400">
+          <div className="hidden sm:flex items-center gap-2 text-xs font-mono text-slate-500 dark:text-slate-400">
             <span className="inline-block h-2 w-2 rounded-full bg-emerald-500"></span>
-            <span>{isRealTime ? 'Live Market Data' : 'Historical Archive'}</span>
+            <span>{dataSource || (isRealTime ? 'Live Market Data' : 'Historical Archive')}</span>
           </div>
 
           <button
