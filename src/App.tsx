@@ -6,6 +6,7 @@ import { StrategyTable } from './components/StrategyTable.js';
 import { CagrChart } from './components/CagrChart.js';
 import { YearlyBreakdownModal } from './components/YearlyBreakdownModal.js';
 import { ExportModal } from './components/ExportModal.js';
+import { Disclaimer } from './components/Disclaimer.js';
 import { BacktestParams, BacktestResponse, StrategyResult } from './types/stock.js';
 import { runClientBacktest } from './services/clientBacktest.js';
 import { AlertCircle, RefreshCw, Layers, TrendingUp, DollarSign } from 'lucide-react';
@@ -263,6 +264,9 @@ export default function App() {
             )}
           </>
         )}
+
+        {/* Regulatory & Methodology Disclaimer */}
+        <Disclaimer />
       </main>
 
       {/* Annual Timeline & Cash Flow Detail Modal */}
@@ -291,9 +295,13 @@ export default function App() {
             <span className="font-bold text-slate-800 dark:text-slate-200">AlphaBacktest</span>
             <span>·</span>
             <span>30-Year Compounding Simulator</span>
+            <span>·</span>
+            <a href="#disclaimer" className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 underline underline-offset-2">
+              Disclaimer &amp; Methodology
+            </a>
           </div>
           <div className="text-center sm:text-right text-[11px] text-slate-400">
-            Split-adjusted historical market data. For educational and back-testing simulation purposes.
+            Educational demonstration only · Not investment advice · Split-adjusted closing prices
           </div>
         </div>
       </footer>
